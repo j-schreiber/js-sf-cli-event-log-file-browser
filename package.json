@@ -1,7 +1,7 @@
 {
-  "name": "@j-schreiber/sf-cli-plugin-ci-template",
-  "description": "Add the description of your SF CLI plugin",
-  "version": "0.1.19",
+  "name": "@j-schreiber/sf-cli-event-log-browser",
+  "description": "Salesforce CLI plugin for browsing and managing Event Log Files",
+  "version": "0.1.0",
   "repository": {
     "type": "https",
     "url": "https://github.com/j-schreiber/sf-cli-plugin-ci-template"
@@ -56,6 +56,9 @@
     "topics": {
       "hello-world": {
         "description": "Placeholder for a useful description"
+      },
+      "eventlog": {
+        "description": "Commands for browsing and managing Salesforce Event Log Files"
       }
     },
     "flexibleTaxonomy": true

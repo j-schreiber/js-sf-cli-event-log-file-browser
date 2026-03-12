@@ -1778,9 +1778,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@j-schreiber/sf-cli-plugin-ci-template@workspace:.":
+"@j-schreiber/sf-cli-event-log-browser@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@j-schreiber/sf-cli-plugin-ci-template@workspace:."
+  resolution: "@j-schreiber/sf-cli-event-log-browser@workspace:."
   dependencies:
     "@oclif/core": "npm:^4.8.0"
     "@release-it/conventional-changelog": "npm:^10.0.1"

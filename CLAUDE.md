@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Salesforce CLI plugin (`@j-schreiber/sf-cli-plugin-ci-template`) built with TypeScript and oclif framework. This is a template/starter for SF CLI plugins with a sample `hello-world` command.
+Salesforce CLI plugin (`@j-schreiber/sf-cli-plugin-ci-template`) built with TypeScript and oclif framework. Provides tools for browsing Salesforce Event Log Files.
 
 ## Common Commands
 
@@ -24,8 +24,8 @@ yarn test:nuts         # Integration tests (parallel execution)
 yarn lint              # ESLint
 yarn format            # Prettier
 
-# Run the plugin locally (dev mode)
-./bin/dev.js hello-world
+# Run the plugin locally (compiled)
+./bin/run.js eventlog list --target-org <alias>
 ```
 
 ## Architecture
@@ -58,6 +58,27 @@ Uses **Wireit** for incremental builds with task coordination. TypeScript compil
 
 - **tests.yml**: Runs on non-main branches (unit + NUT tests)
 - **publish.yml**: Auto-release on main via `release-it` with conventional changelog
+
+## Available Commands
+
+### `sf eventlog list`
+Query and display EventLogFile records from a Salesforce org.
+
+```bash
+# List all event logs (default: last 30 days)
+sf eventlog list --target-org myOrg
+
+# Filter by event type
+sf eventlog list --target-org myOrg --event-type Login
+
+# Filter by number of days
+sf eventlog list --target-org myOrg --last-n-days 7
+
+# Filter by interval (Hourly or Daily)
+sf eventlog list --target-org myOrg --interval Hourly
+```
+
+**Note:** Requires Event Monitoring license.
 
 ## Adding New Commands
 
