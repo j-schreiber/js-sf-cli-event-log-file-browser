@@ -1,16 +1,11 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
+import { EventLogFileRecord } from '../../types/eventLogTypes.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-browser', 'eventlog.list');
 
-export type EventLogFileRecord = {
-  Id: string;
-  EventType: string;
-  LogDate: string;
-  LogFileLength: number;
-  CreatedDate: string;
-};
+export type { EventLogFileRecord };
 
 export type EventLogListResult = {
   records: EventLogFileRecord[];

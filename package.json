@@ -9,6 +9,7 @@
   "homepage": "https://github.com/j-schreiber/sf-cli-plugin-ci-template/wiki",
   "dependencies": {
     "@oclif/core": "^4.8.0",
+    "@oclif/multi-stage-output": "^0.8.30",
     "@salesforce/core": "^8.24.0",
     "@salesforce/sf-plugins-core": "^12.2.6"
   },

@@ -5,7 +5,7 @@
   "functions": 60,
   "branches": 60,
   "include": ["src/**/*.ts"],
-  "exclude": ["test/**"],
+  "exclude": ["test/**", "src/types/**"],
   "reporter": ["text", "text-summary"],
   "all": true
 }

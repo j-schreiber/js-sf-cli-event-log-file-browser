@@ -24,6 +24,11 @@ type HttpRequest =
   | string;
 
 /**
+ * Result type for HTTP requests - can be a string response or an error
+ */
+type HttpRequestResult = string | Error;
+
+/**
  * Extracts the URL from an HTTP request object or string.
  */
 function extractUrl(request: HttpRequest): string {
@@ -75,6 +80,17 @@ export default class AdvancedTestContext {
    */
   public queryError: Error | null = null;
 
+  /**
+   * Map of HTTP request URL patterns to their results.
+   * Use this to stub HTTP requests like LogFile downloads.
+   * The key is a substring to match against the URL.
+   *
+   * @example
+   * $$.httpRequestResult.set('/LogFile', 'CSV content here');
+   * $$.httpRequestResult.set('/LogFile', new Error('Download failed'));
+   */
+  public httpRequestResult: Map<string, HttpRequestResult> = new Map();
+
   private internalQueryResult: QueryResult<AnyJson> | null = null;
   private queryResultWasSet = false;
 
@@ -118,6 +134,7 @@ export default class AdvancedTestContext {
     this.queryResultWasSet = false;
     this.queryError = null;
     this.lastQuery = null;
+    this.httpRequestResult.clear();
   }
 
   /**
@@ -136,6 +153,15 @@ export default class AdvancedTestContext {
         return Promise.resolve(testContext.handleQueryRequest(url));
       }
 
+      // Handle stubbed HTTP requests (e.g., LogFile downloads)
+      const httpResult = testContext.handleHttpRequest(url);
+      if (httpResult !== undefined) {
+        if (httpResult instanceof Error) {
+          return Promise.reject(httpResult);
+        }
+        return Promise.resolve(httpResult as AnyJson);
+      }
+
       // Throw error for any unhandled request types
       return Promise.reject(
         new Error(
@@ -144,6 +170,19 @@ export default class AdvancedTestContext {
         )
       );
     };
+  }
+
+  /**
+   * Handles HTTP requests by checking for matching URL patterns in httpRequestResult.
+   * Returns undefined if no matching pattern is found.
+   */
+  private handleHttpRequest(url: string): HttpRequestResult | undefined {
+    for (const [pattern, result] of this.httpRequestResult.entries()) {
+      if (url.includes(pattern)) {
+        return result;
+      }
+    }
+    return undefined;
   }
 
   /**
