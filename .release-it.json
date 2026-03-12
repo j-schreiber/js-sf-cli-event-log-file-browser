@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+  "github": {
+    "release": true,
+    "releaseName": "${version}"
+  },
+  "git": {
+    "commitMessage": "admin: release v${version}",
+    "commitArgs": ["--no-verify"],
+    "pushArgs": ["--no-verify"],
+    "push": true,
+    "tag": true,
+    "tagName": "v${version}",
+    "requireCleanWorkingDir": false
+  },
+  "npm": {
+    "publish": true,
+    "skipChecks": true
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "angular"
+      }
+    }
+  },
+  "hooks": {
+    "after:bump": "yarn install",
+    "before:npm:release": "yarn readme && git add README.md"
+  }
+}
