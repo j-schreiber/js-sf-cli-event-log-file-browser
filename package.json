@@ -78,7 +78,7 @@
     "prepack": "sf-prepack",
     "test": "wireit",
     "test:nuts": "mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
-    "test:only": "wireit",
+    "test:only": "c8 mocha \"test/**/*.test.ts\"",
     "readme": "wireit",
     "prepare": "husky",
     "release": "rm -rf .wireit && yarn build && release-it"
@@ -148,21 +148,6 @@
         "test:command-reference",
         "lint"
       ]
-    },
-    "test:only": {
-      "command": "c8 mocha \"test/**/*.test.ts\"",
-      "env": {
-        "FORCE_COLOR": "2"
-      },
-      "files": [
-        "test/**/*.ts",
-        "src/**/*.ts",
-        "**/tsconfig.json",
-        ".mocha*",
-        "!*.nut.ts",
-        ".c8rc.json"
-      ],
-      "output": []
     },
     "test:command-reference": {
       "command": "node --import tsx \"./bin/dev.js\" commandreference:generate --error-on-warnings",

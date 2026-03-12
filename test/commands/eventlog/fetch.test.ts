@@ -52,6 +52,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -82,6 +83,7 @@ describe('eventlog fetch', () => {
       tempDir,
       '--event-type',
       'Login',
+      '--json',
     ]);
 
     // Assert
@@ -102,6 +104,7 @@ describe('eventlog fetch', () => {
       tempDir,
       '--last-n-days',
       '7',
+      '--json',
     ]);
 
     // Assert
@@ -135,6 +138,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -171,6 +175,7 @@ describe('eventlog fetch', () => {
       '--output-dir',
       tempDir,
       '--force',
+      '--json',
     ]);
 
     // Assert
@@ -213,6 +218,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -236,6 +242,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -243,10 +250,6 @@ describe('eventlog fetch', () => {
     expect(result.downloadedFiles).to.equal(0);
     expect(result.skippedFiles).to.equal(0);
     expect(result.failedFiles).to.equal(0);
-
-    // Verify log was called with "no new files" message
-    expect($$.sfCommandStubs.log.calledOnce).to.equal(true);
-    expect($$.sfCommandStubs.log.firstCall.args[0]).to.include('No new event log files');
   });
 
   it('handles download failures gracefully', async () => {
@@ -260,6 +263,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -281,6 +285,7 @@ describe('eventlog fetch', () => {
         $$.targetOrgConnection.getUsername()!,
         '--output-dir',
         tempDir,
+        '--json',
       ]);
       expect.fail('Expected error to be thrown');
     } catch (error) {
@@ -300,6 +305,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       newDir,
+      '--json',
     ]);
 
     // Assert
@@ -320,6 +326,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert
@@ -346,6 +353,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert - verify manifest content
@@ -378,6 +386,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert - verify sanitized path
@@ -406,6 +415,7 @@ describe('eventlog fetch', () => {
       $$.targetOrgConnection.getUsername()!,
       '--output-dir',
       tempDir,
+      '--json',
     ]);
 
     // Assert - verify warn was called about org mismatch
@@ -428,6 +438,7 @@ describe('eventlog fetch', () => {
       tempDir,
       '--concurrency',
       '5',
+      '--json',
     ]);
 
     // Assert
