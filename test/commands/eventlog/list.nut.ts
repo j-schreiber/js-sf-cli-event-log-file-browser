@@ -4,7 +4,7 @@ import { execCmd, TestSession } from '@salesforce/cli-plugins-testkit';
 import { EventLogListResult } from '../../../src/commands/eventlog/list.js';
 
 const testingWorkingDir = path.join('test', 'data', 'test-sfdx-project');
-const scratchOrgAlias = 'Test Org';
+const scratchOrgAlias = 'DefaultScratchOrg';
 
 describe('eventlog list NUTs', () => {
   let session: TestSession;
@@ -45,7 +45,7 @@ describe('eventlog list NUTs', () => {
 
   it('successfully executes eventlog list with --event-type filter', () => {
     const result = execCmd<EventLogListResult>(
-      `eventlog list --target-org "${scratchOrgAlias}" --event-type Login`,
+      `eventlog list --target-org "${scratchOrgAlias}" --event-type ApiTotalUsage`,
       {
         ensureExitCode: 0,
       }
@@ -56,12 +56,9 @@ describe('eventlog list NUTs', () => {
   });
 
   it('successfully executes eventlog list with --last-n-days filter', () => {
-    const result = execCmd<EventLogListResult>(
-      `eventlog list --target-org "${scratchOrgAlias}" --last-n-days 30`,
-      {
-        ensureExitCode: 0,
-      }
-    ).jsonOutput?.result;
+    const result = execCmd<EventLogListResult>(`eventlog list --target-org "${scratchOrgAlias}" --last-n-days 30`, {
+      ensureExitCode: 0,
+    }).jsonOutput?.result;
 
     assert.isDefined(result);
     assert.isArray(result?.records);
