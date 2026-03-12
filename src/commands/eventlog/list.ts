@@ -1,6 +1,8 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import { EventLogFileRecord } from '../../types/eventLogTypes.js';
+import { queryEventLogFiles } from '../../services/EventLogQueryService.js';
+import { formatFileSize, formatDate } from '../../utils/formatters.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-browser', 'eventlog.list');
@@ -18,20 +20,6 @@ type TableRow = {
   LogDate: string;
   Size: string;
 };
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(isoDate: string): string {
-  return isoDate.split('T')[0];
-}
 
 export default class EventLogList extends SfCommand<EventLogListResult> {
   public static readonly summary = messages.getMessage('summary');
@@ -61,26 +49,15 @@ export default class EventLogList extends SfCommand<EventLogListResult> {
     const { flags } = await this.parse(EventLogList);
     const connection = flags['target-org'].getConnection(flags['api-version']);
 
-    const whereConditions: string[] = [];
+    const records = await queryEventLogFiles(connection, {
+      eventType: flags['event-type'],
+      lastNDays: flags['last-n-days'],
+    });
 
-    if (flags['event-type']) {
-      whereConditions.push(`EventType = '${flags['event-type']}'`);
-    }
-
-    if (flags['last-n-days']) {
-      whereConditions.push(`LogDate = LAST_N_DAYS:${flags['last-n-days']}`);
-    }
-
-    const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
-
-    const query = `SELECT Id, EventType, LogDate, LogFileLength, CreatedDate FROM EventLogFile${whereClause} ORDER BY LogDate DESC, EventType ASC`;
-
-    const result = await connection.query<EventLogFileRecord>(query);
-
-    if (result.records.length === 0) {
+    if (records.length === 0) {
       this.log(messages.getMessage('info.noResults'));
     } else {
-      const tableData: TableRow[] = result.records.map((record) => ({
+      const tableData: TableRow[] = records.map((record) => ({
         Id: record.Id,
         EventType: record.EventType,
         LogDate: formatDate(record.LogDate),
@@ -94,8 +71,8 @@ export default class EventLogList extends SfCommand<EventLogListResult> {
     }
 
     return {
-      records: result.records,
-      totalSize: result.totalSize,
+      records,
+      totalSize: records.length,
     };
   }
 }

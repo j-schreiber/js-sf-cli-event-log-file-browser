@@ -60,3 +60,11 @@ export type EventLogFetchResult = {
   totalBytesDownloaded: number;
   files: FetchedFile[];
 };
+
+/**
+ * Query filters for EventLogFile queries.
+ */
+export type QueryFilters = {
+  eventType?: string;
+  lastNDays?: number;
+};

@@ -38,6 +38,9 @@ function extractUrl(request: HttpRequest): string {
   return request.url ?? '';
 }
 
+// Store original fetch for restoration
+const originalFetch = global.fetch;
+
 /**
  * The advanced test context encapsulates all testing related stubs and mocks
  * for unit tests (not NUTs!). It is primarily used to stub Salesforce API calls.
@@ -117,11 +120,13 @@ export default class AdvancedTestContext {
     this.targetOrgConnection = await this.targetOrg.getConnection();
     this.sfCommandStubs = stubSfCommandUx(this.context.SANDBOX);
     this.setupFakeConnectionRequest();
+    this.setupFakeFetch();
   }
 
   public reset(): void {
     this.context.restore();
     this.resetStubDefaults();
+    global.fetch = originalFetch;
     process.removeAllListeners();
   }
 
@@ -211,5 +216,34 @@ export default class AdvancedTestContext {
 
     // Return the configured query result
     return this.internalQueryResult as AnyJson;
+  }
+
+  /**
+   * Sets up a fake global.fetch to intercept EventLogFile downloads.
+   * Uses httpRequestResult map for stubbed responses.
+   */
+  private setupFakeFetch(): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const testContext = this;
+
+    global.fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+      // Check for LogFile download requests
+      const httpResult = testContext.handleHttpRequest(url);
+      if (httpResult !== undefined) {
+        if (httpResult instanceof Error) {
+          throw httpResult;
+        }
+        return new Response(httpResult, {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'Content-Type': 'text/csv' },
+        });
+      }
+
+      // Fall through to original fetch for non-stubbed requests
+      return originalFetch(input, init);
+    };
   }
 }

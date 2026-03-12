@@ -1,158 +1,24 @@
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Connection, Messages } from '@salesforce/core';
 import { MultiStageOutput } from '@oclif/multi-stage-output';
+import { EventLogFileRecord, EventLogManifest, EventLogFetchResult, FetchedFile } from '../../types/eventLogTypes.js';
+import { queryEventLogFiles } from '../../services/EventLogQueryService.js';
+import { downloadFile } from '../../services/EventLogDownloadService.js';
 import {
-  EventLogFileRecord,
-  EventLogManifest,
-  ManifestFileEntry,
-  EventLogFetchResult,
-  FetchedFile,
-} from '../../types/eventLogTypes.js';
+  MANIFEST_FILENAME,
+  loadManifest,
+  saveManifest,
+  filterFilesToDownload,
+} from '../../services/ManifestService.js';
+import { formatFileSize, formatDate } from '../../utils/formatters.js';
+import { ensureDirectory } from '../../utils/fileUtils.js';
+import { Semaphore } from '../../utils/Semaphore.js';
 
 export type { EventLogFetchResult };
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-browser', 'eventlog.fetch');
-
-const MANIFEST_FILENAME = '.eventlog-manifest.json';
-const MANIFEST_VERSION = '1.0';
-const MAX_RETRIES = 3;
-const INITIAL_BACKOFF_MS = 1000;
-
-/**
- * Semaphore for controlling concurrent downloads.
- */
-class Semaphore {
-  private queue: Array<() => void> = [];
-  private running = 0;
-
-  public constructor(private maxConcurrent: number) {}
-
-  public async acquire(): Promise<void> {
-    if (this.running < this.maxConcurrent) {
-      this.running++;
-      return;
-    }
-    return new Promise<void>((resolve) => {
-      this.queue.push(() => {
-        this.running++;
-        resolve();
-      });
-    });
-  }
-
-  public release(): void {
-    this.running--;
-    const next = this.queue.shift();
-    if (next) {
-      next();
-    }
-  }
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(isoDate: string): string {
-  return isoDate.split('T')[0];
-}
-
-/**
- * Sanitizes a string for use as a directory or file name.
- * Removes characters that are invalid in file paths.
- */
-function sanitizeForPath(name: string): string {
-  return name.replace(/[<>:"/\\|?*]/g, '_');
-}
-
-/**
- * Sleeps for the specified number of milliseconds.
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Ensures a directory exists, creating it recursively if needed.
- */
-function ensureDirectory(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    try {
-      fs.mkdirSync(dirPath, { recursive: true });
-    } catch (error) {
-      throw new Error(messages.getMessage('error.createDirectory', [(error as Error).message]));
-    }
-  }
-}
-
-/**
- * Queries EventLogFile records from Salesforce.
- */
-async function queryEventLogFiles(
-  connection: Connection,
-  eventType: string | undefined,
-  lastNDays: number
-): Promise<EventLogFileRecord[]> {
-  const whereConditions: string[] = [];
-
-  if (eventType) {
-    whereConditions.push(`EventType = '${eventType}'`);
-  }
-
-  if (lastNDays) {
-    whereConditions.push(`LogDate = LAST_N_DAYS:${lastNDays}`);
-  }
-
-  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
-
-  const query = `SELECT Id, EventType, LogDate, LogFileLength, CreatedDate FROM EventLogFile${whereClause} ORDER BY LogDate DESC, EventType ASC`;
-
-  const result = await connection.query<EventLogFileRecord>(query);
-  return result.records;
-}
-
-/**
- * Creates an empty manifest structure.
- */
-function createEmptyManifest(orgId: string): EventLogManifest {
-  return {
-    version: MANIFEST_VERSION,
-    orgId,
-    lastFetch: new Date().toISOString(),
-    files: {},
-  };
-}
-
-/**
- * Filters records to only those that need to be downloaded.
- */
-function filterFilesToDownload(
-  records: EventLogFileRecord[],
-  manifest: EventLogManifest,
-  force: boolean
-): EventLogFileRecord[] {
-  if (force) {
-    return records;
-  }
-  return records.filter((record) => !manifest.files[record.Id]);
-}
-
-/**
- * Saves manifest to disk.
- */
-function saveManifest(manifestPath: string, manifest: EventLogManifest): void {
-  const updatedManifest = { ...manifest, lastFetch: new Date().toISOString() };
-  fs.writeFileSync(manifestPath, JSON.stringify(updatedManifest, null, 2));
-}
 
 /**
  * Creates an empty fetch result.
@@ -252,117 +118,6 @@ function buildResult(
   };
 }
 
-/**
- * Downloads a file with retry logic using recursive approach.
- * Uses native fetch to get raw CSV content (connection.request auto-parses CSV to JSON).
- */
-async function downloadWithRetry(
-  connection: Connection,
-  recordId: string,
-  attempt = 0,
-  lastError?: Error
-): Promise<string> {
-  if (attempt >= MAX_RETRIES) {
-    throw lastError ?? new Error('Download failed after retries');
-  }
-
-  try {
-    const accessToken = connection.accessToken;
-    if (!accessToken) {
-      throw new Error('No access token available for connection');
-    }
-    const url = `${connection.baseUrl()}/sobjects/EventLogFile/${recordId}/LogFile`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'text/csv',
-      },
-    });
-
-    if (!response.ok) {
-      const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & { statusCode: number };
-      error.statusCode = response.status;
-      throw error;
-    }
-
-    return await response.text();
-  } catch (error) {
-    const currentError = error as Error;
-    const statusCode = (error as { statusCode?: number }).statusCode;
-
-    // Check for rate limiting (429) or if we have retries left
-    if (statusCode === 429 || attempt < MAX_RETRIES - 1) {
-      const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
-      await sleep(backoffMs);
-    }
-
-    return downloadWithRetry(connection, recordId, attempt + 1, currentError);
-  }
-}
-
-/**
- * Downloads a single event log file and updates the manifest.
- */
-async function downloadFile(
-  connection: Connection,
-  record: EventLogFileRecord,
-  outputDir: string,
-  manifest: EventLogManifest
-): Promise<FetchedFile> {
-  const eventTypeDir = path.join(outputDir, sanitizeForPath(record.EventType));
-  const fileName = `${sanitizeForPath(record.EventType)}_${formatDate(record.LogDate)}_${record.Id}.csv`;
-  const filePath = path.join(eventTypeDir, fileName);
-  const tempFilePath = `${filePath}.tmp`;
-
-  // Ensure event type directory exists
-  ensureDirectory(eventTypeDir);
-
-  try {
-    const content = await downloadWithRetry(connection, record.Id);
-
-    // Write to temp file first, then rename
-    fs.writeFileSync(tempFilePath, content);
-    fs.renameSync(tempFilePath, filePath);
-
-    const fileSize = fs.statSync(filePath).size;
-
-    // Update manifest
-    const entry: ManifestFileEntry = {
-      eventType: record.EventType,
-      logDate: formatDate(record.LogDate),
-      fileName,
-      downloadedAt: new Date().toISOString(),
-      size: fileSize,
-    };
-    manifest.files[record.Id] = entry;
-
-    return {
-      id: record.Id,
-      eventType: record.EventType,
-      logDate: formatDate(record.LogDate),
-      fileName,
-      size: fileSize,
-      status: 'downloaded',
-    };
-  } catch (error) {
-    // Clean up temp file if it exists
-    if (fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
-    }
-
-    return {
-      id: record.Id,
-      eventType: record.EventType,
-      logDate: formatDate(record.LogDate),
-      fileName,
-      size: 0,
-      status: 'failed',
-      error: (error as Error).message,
-    };
-  }
-}
-
 type MsoData = { downloadedCount: number; totalCount: number; downloadedBytes: number };
 
 export default class EventLogFetch extends SfCommand<EventLogFetchResult> {
@@ -440,12 +195,15 @@ export default class EventLogFetch extends SfCommand<EventLogFetchResult> {
 
       // Stage 1: Query event log files
       this.mso?.goto('Querying event log files');
-      const records = await queryEventLogFiles(connection, flags['event-type'], flags['last-n-days']);
+      const records = await queryEventLogFiles(connection, {
+        eventType: flags['event-type'],
+        lastNDays: flags['last-n-days'],
+      });
 
       if (records.length === 0) {
         // Save empty manifest even when no records found
         const manifestPath = path.join(outputDir, MANIFEST_FILENAME);
-        const manifest = this.loadManifest(manifestPath, orgId, false);
+        const manifest = loadManifest(manifestPath, orgId, (msg) => this.warn(msg));
         saveManifest(manifestPath, manifest);
         this.mso?.stop();
         this.log(messages.getMessage('info.noNewFiles'));
@@ -455,7 +213,7 @@ export default class EventLogFetch extends SfCommand<EventLogFetchResult> {
       // Stage 2: Load and analyze manifest
       this.mso?.goto('Analyzing local cache');
       const manifestPath = path.join(outputDir, MANIFEST_FILENAME);
-      const manifest = this.loadManifest(manifestPath, orgId, flags.force);
+      const manifest = loadManifest(manifestPath, orgId, (msg) => this.warn(msg));
 
       // Filter files to download
       const filesToDownload = filterFilesToDownload(records, manifest, flags.force);
@@ -495,32 +253,6 @@ export default class EventLogFetch extends SfCommand<EventLogFetchResult> {
     } catch (error) {
       this.mso?.stop('failed');
       throw error;
-    }
-  }
-
-  private loadManifest(manifestPath: string, currentOrgId: string, force: boolean): EventLogManifest {
-    if (!fs.existsSync(manifestPath)) {
-      return createEmptyManifest(currentOrgId);
-    }
-
-    try {
-      const content = fs.readFileSync(manifestPath, 'utf-8');
-      const manifest = JSON.parse(content) as EventLogManifest;
-
-      // Check org ID mismatch
-      if (manifest.orgId !== currentOrgId && !force) {
-        this.warn(messages.getMessage('info.manifestOrgMismatch', [manifest.orgId, currentOrgId]));
-      }
-
-      return manifest;
-    } catch {
-      // Backup corrupted manifest and create new one
-      this.warn(messages.getMessage('error.manifestCorrupted'));
-      const backupPath = `${manifestPath}.backup.${Date.now()}`;
-      if (fs.existsSync(manifestPath)) {
-        fs.renameSync(manifestPath, backupPath);
-      }
-      return createEmptyManifest(currentOrgId);
     }
   }
 
