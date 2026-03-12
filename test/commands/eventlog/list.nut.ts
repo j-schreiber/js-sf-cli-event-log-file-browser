@@ -33,7 +33,7 @@ describe('eventlog list NUTs', () => {
 
   it('successfully executes eventlog list and returns valid JSON structure', () => {
     // Note: Scratch orgs may not have Event Monitoring license, so we allow exit code 0 or 1
-    const result = execCmd<EventLogListResult>(`eventlog list --target-org "${scratchOrgAlias}"`, {
+    const result = execCmd<EventLogListResult>(`eventlog list --target-org "${scratchOrgAlias}" --json`, {
       ensureExitCode: 0,
     }).jsonOutput?.result;
 
@@ -45,7 +45,7 @@ describe('eventlog list NUTs', () => {
 
   it('successfully executes eventlog list with --event-type filter', () => {
     const result = execCmd<EventLogListResult>(
-      `eventlog list --target-org "${scratchOrgAlias}" --event-type ApiTotalUsage`,
+      `eventlog list --target-org "${scratchOrgAlias}" --event-type ApiTotalUsage --json`,
       {
         ensureExitCode: 0,
       }
@@ -56,7 +56,7 @@ describe('eventlog list NUTs', () => {
   });
 
   it('successfully executes eventlog list with --last-n-days filter', () => {
-    const result = execCmd<EventLogListResult>(`eventlog list --target-org "${scratchOrgAlias}" --last-n-days 30`, {
+    const result = execCmd<EventLogListResult>(`eventlog list --target-org "${scratchOrgAlias}" --last-n-days 30 --json`, {
       ensureExitCode: 0,
     }).jsonOutput?.result;
 

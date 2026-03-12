@@ -7,7 +7,7 @@ A Salesforce CLI command to query and display EventLogFile records from a target
 ## Command
 
 ```
-sf event-logs list
+sf eventlog list
 ```
 
 ## Problem Statement
@@ -37,25 +37,25 @@ FROM EventLogFile
 
 Output event log files as a formatted terminal table with columns:
 
-| Column | Source Field | Description |
-|--------|--------------|-------------|
-| ID | `Id` | EventLogFile record ID |
-| Event Type | `EventType` | Type of event (Login, API, Report, etc.) |
-| Log Date | `LogDate` | Date the events occurred |
-| Size | `LogFileLength` | File size (formatted as KB/MB) |
-| Interval | `Interval` | Hourly or Daily |
-| Sequence | `Sequence` | Sequence number (for hourly logs) |
+| Column     | Source Field    | Description                              |
+| ---------- | --------------- | ---------------------------------------- |
+| ID         | `Id`            | EventLogFile record ID                   |
+| Event Type | `EventType`     | Type of event (Login, API, Report, etc.) |
+| Log Date   | `LogDate`       | Date the events occurred                 |
+| Size       | `LogFileLength` | File size (formatted as KB/MB)           |
+| Interval   | `Interval`      | Hourly or Daily                          |
+| Sequence   | `Sequence`      | Sequence number (for hourly logs)        |
 
 #### Command Flags
 
-| Flag | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `--target-org, -o` | string | No | Default org | Salesforce org alias or username |
-| `--event-type, -e` | string | No | All | Filter by event type (e.g., Login, API, Report) |
-| `--log-date, -d` | date | No | None | Filter by specific log date (YYYY-MM-DD) |
-| `--last-n-days, -n` | integer | No | None | Filter logs from last N days |
-| `--interval, -i` | string | No | All | Filter by interval (Hourly, Daily) |
-| `--json` | boolean | No | false | Output results as JSON |
+| Flag                | Type    | Required | Default     | Description                                     |
+| ------------------- | ------- | -------- | ----------- | ----------------------------------------------- |
+| `--target-org, -o`  | string  | No       | Default org | Salesforce org alias or username                |
+| `--event-type, -e`  | string  | No       | All         | Filter by event type (e.g., Login, API, Report) |
+| `--log-date, -d`    | date    | No       | None        | Filter by specific log date (YYYY-MM-DD)        |
+| `--last-n-days, -n` | integer | No       | None        | Filter logs from last N days                    |
+| `--interval, -i`    | string  | No       | All         | Filter by interval (Hourly, Daily)              |
+| `--json`            | boolean | No       | false       | Output results as JSON                          |
 
 #### Example Usage
 
@@ -86,18 +86,18 @@ sf eventlog list --json
 
 ### Key Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `Id` | ID | Unique record identifier |
-| `EventType` | String | Event category (Login, API, Report, etc.) |
-| `LogDate` | DateTime | Date events occurred |
-| `LogFile` | Blob | Gzip-compressed CSV content (for download) |
-| `LogFileLength` | Integer | Size in bytes |
-| `LogFileFieldNames` | String | CSV column names |
-| `LogFileFieldTypes` | String | CSV column types |
-| `Interval` | Picklist | "Hourly" or "Daily" |
-| `Sequence` | Integer | Order within hour (hourly logs only) |
-| `CreatedDate` | DateTime | Record creation timestamp |
+| Field               | Type     | Description                                |
+| ------------------- | -------- | ------------------------------------------ |
+| `Id`                | ID       | Unique record identifier                   |
+| `EventType`         | String   | Event category (Login, API, Report, etc.)  |
+| `LogDate`           | DateTime | Date events occurred                       |
+| `LogFile`           | Blob     | Gzip-compressed CSV content (for download) |
+| `LogFileLength`     | Integer  | Size in bytes                              |
+| `LogFileFieldNames` | String   | CSV column names                           |
+| `LogFileFieldTypes` | String   | CSV column types                           |
+| `Interval`          | Picklist | "Hourly" or "Daily"                        |
+| `Sequence`          | Integer  | Order within hour (hourly logs only)       |
+| `CreatedDate`       | DateTime | Record creation timestamp                  |
 
 ### Common EventType Values
 
@@ -134,12 +134,12 @@ ORDER BY LogDate DESC, EventType ASC
 
 ### Error Handling
 
-| Scenario | Handling |
-|----------|----------|
+| Scenario                    | Handling                                                                    |
+| --------------------------- | --------------------------------------------------------------------------- |
 | No Event Monitoring license | Display message: "Event Monitoring license required to access EventLogFile" |
-| No results | Display message: "No event log files found matching criteria" |
-| Invalid event type | Display available event types |
-| Connection failure | Standard SF CLI connection error |
+| No results                  | Display message: "No event log files found matching criteria"               |
+| Invalid event type          | Display available event types                                               |
+| Connection failure          | Standard SF CLI connection error                                            |
 
 ## Success Metrics
 
