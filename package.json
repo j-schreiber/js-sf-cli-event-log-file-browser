@@ -1,7 +1,7 @@
 {
-  "name": "@j-schreiber/sf-cli-plugin-ci-template",
-  "description": "Add the description of your SF CLI plugin",
-  "version": "0.1.19",
+  "name": "@j-schreiber/sf-cli-event-log-browser",
+  "description": "Salesforce CLI plugin for browsing and managing Event Log Files",
+  "version": "0.1.0",
   "repository": {
     "type": "https",
     "url": "https://github.com/j-schreiber/sf-cli-plugin-ci-template"
@@ -9,6 +9,7 @@
   "homepage": "https://github.com/j-schreiber/sf-cli-plugin-ci-template/wiki",
   "dependencies": {
     "@oclif/core": "^4.8.0",
+    "@oclif/multi-stage-output": "^0.8.30",
     "@salesforce/core": "^8.24.0",
     "@salesforce/sf-plugins-core": "^12.2.6"
   },
@@ -18,8 +19,10 @@
     "@salesforce/dev-scripts": "^11.0.4",
     "@salesforce/plugin-command-reference": "^3.1.79",
     "@types/node": "25",
+    "c8": "^11.0.0",
     "eslint-plugin-sf-plugin": "^1.18.6",
     "husky": "^9.1.7",
+    "mocha": "^11.7.5",
     "oclif": "^4.14.0",
     "release-it": "^19.0.3",
     "tsx": "^4.21.0",
@@ -56,6 +59,9 @@
     "topics": {
       "hello-world": {
         "description": "Placeholder for a useful description"
+      },
+      "eventlog": {
+        "description": "Commands for browsing and managing Salesforce Event Log Files"
       }
     },
     "flexibleTaxonomy": true
@@ -71,8 +77,8 @@
     "lint": "wireit",
     "prepack": "sf-prepack",
     "test": "wireit",
-    "test:nuts": "nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
-    "test:only": "wireit",
+    "test:nuts": "mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
+    "test:only": "c8 mocha \"test/**/*.test.ts\"",
     "readme": "wireit",
     "prepare": "husky",
     "release": "rm -rf .wireit && yarn build && release-it"
@@ -142,21 +148,6 @@
         "test:command-reference",
         "lint"
       ]
-    },
-    "test:only": {
-      "command": "nyc mocha \"test/**/*.test.ts\"",
-      "env": {
-        "FORCE_COLOR": "2"
-      },
-      "files": [
-        "test/**/*.ts",
-        "src/**/*.ts",
-        "**/tsconfig.json",
-        ".mocha*",
-        "!*.nut.ts",
-        ".nycrc"
-      ],
-      "output": []
     },
     "test:command-reference": {
       "command": "node --import tsx \"./bin/dev.js\" commandreference:generate --error-on-warnings",
