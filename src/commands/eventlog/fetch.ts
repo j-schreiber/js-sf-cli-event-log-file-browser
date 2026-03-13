@@ -18,7 +18,7 @@ import { Semaphore } from '../../utils/Semaphore.js';
 export type { EventLogFetchResult };
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-browser', 'eventlog.fetch');
+const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-file-browser', 'eventlog.fetch');
 
 /**
  * Creates an empty fetch result.
@@ -292,7 +292,10 @@ export default class EventLogFetch extends SfCommand<EventLogFetchResult> {
   private logSummary(result: EventLogFetchResult): void {
     if (result.downloadedFiles > 0) {
       this.log(
-        messages.getMessage('info.downloadComplete', [result.downloadedFiles, formatFileSize(result.totalBytesDownloaded)])
+        messages.getMessage('info.downloadComplete', [
+          result.downloadedFiles,
+          formatFileSize(result.totalBytesDownloaded),
+        ])
       );
     }
 

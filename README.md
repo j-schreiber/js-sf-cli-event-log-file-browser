@@ -1,6 +1,16 @@
-# @j-schreiber/sf-cli-plugin-ci-template
+# @j-schreiber/sf-cli-event-log-file-browser
 
-This is a demo / template repo to experiment with various CI workflows. It is not intended for production use.
+This is a small utility to download event log files from a target org to a target directory.
+
+There are two ways to install it
+
+```bash
+# link locally after checking out git repo
+sf plugins link .
+
+# install from NPM
+sf plugins install @j-schreiber/sf-cli-event-log-file-browser
+```
 
 # Documentation
 

@@ -5,7 +5,7 @@ import { queryEventLogFiles } from '../../services/EventLogQueryService.js';
 import { formatFileSize, formatDate } from '../../utils/formatters.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-browser', 'eventlog.list');
+const messages = Messages.loadMessages('@j-schreiber/sf-cli-event-log-file-browser', 'eventlog.list');
 
 export type { EventLogFileRecord };
 

@@ -1,12 +1,12 @@
 {
-  "name": "@j-schreiber/sf-cli-event-log-browser",
+  "name": "@j-schreiber/sf-cli-event-log-file-browser",
   "description": "Salesforce CLI plugin for browsing and managing Event Log Files",
   "version": "0.1.0",
   "repository": {
     "type": "https",
-    "url": "https://github.com/j-schreiber/sf-cli-plugin-ci-template"
+    "url": "https://github.com/j-schreiber/js-sf-cli-event-log-file-browser"
   },
-  "homepage": "https://github.com/j-schreiber/sf-cli-plugin-ci-template/wiki",
+  "homepage": "https://github.com/j-schreiber/js-sf-cli-event-log-file-browser",
   "dependencies": {
     "@oclif/core": "^4.8.0",
     "@oclif/multi-stage-output": "^0.8.30",
