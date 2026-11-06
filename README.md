@@ -74,7 +74,7 @@ EXAMPLES
     $ sf eventlog fetch --target-org myOrg --output-dir ./event-logs --concurrency 5
 ```
 
-_See code: [src/commands/eventlog/fetch.ts](https://github.com/j-schreiber/js-sf-cli-event-log-file-browser/blob/v0.2.0/src/commands/eventlog/fetch.ts)_
+_See code: [src/commands/eventlog/fetch.ts](https://github.com/j-schreiber/js-sf-cli-event-log-file-browser/blob/v0.2.1/src/commands/eventlog/fetch.ts)_
 
 ## `sf eventlog list`
 
@@ -118,6 +118,6 @@ EXAMPLES
     $ sf eventlog list --target-org myOrg --event-type Login --last-n-days 30
 ```
 
-_See code: [src/commands/eventlog/list.ts](https://github.com/j-schreiber/js-sf-cli-event-log-file-browser/blob/v0.2.0/src/commands/eventlog/list.ts)_
+_See code: [src/commands/eventlog/list.ts](https://github.com/j-schreiber/js-sf-cli-event-log-file-browser/blob/v0.2.1/src/commands/eventlog/list.ts)_
 
 <!-- commandsstop -->
